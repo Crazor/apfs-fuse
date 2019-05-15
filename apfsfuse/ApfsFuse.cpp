@@ -67,6 +67,7 @@ static Device *g_disk_tier2 = nullptr;
 static ApfsContainer *g_container = nullptr;
 static ApfsVolume *g_volume = nullptr;
 static unsigned int g_vol_id = 0;
+static uint64_t g_xid = 0;
 static uid_t g_uid = 0;
 static gid_t g_gid = 0;
 static bool g_set_uid = false;
@@ -639,6 +640,7 @@ void usage(const char *name)
 	std::cout << "-p partition  : Specify partition id containing the container." << std::endl;
 	std::cout << "-l            : Allow driver to return potentially corrupt data instead of" << std::endl;
 	std::cout << "                failing, if it can't handle something." << std::endl;
+	std::cout << "-x xid        : Use superblock with specified xid instead of most recent one." << std::endl;
 	std::cout << std::endl;
 	std::cout << "Additional mount options (using -o):" << std::endl;
 	std::cout << "uid=N         : Pretend that all files have UID N." << std::endl;
@@ -745,7 +747,7 @@ int main(int argc, char *argv[])
 	g_set_uid = false;
 	g_set_gid = false;
 
-	while ((opt = getopt(argc, argv, "d:f:o:p:v:r:s:l")) != -1)
+	while ((opt = getopt(argc, argv, "d:f:o:p:v:x:r:s:l:")) != -1)
 	{
 		switch (opt)
 		{
@@ -763,6 +765,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'v':
 				g_vol_id = strtoul(optarg, nullptr, 10);
+				break;
+			case 'x':
+				g_xid = strtoul(optarg, nullptr, 10);
 				break;
 			case 'r':
 				g_password = optarg;
@@ -876,7 +881,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	g_container = new ApfsContainer(g_disk_main, main_offset, main_size, g_disk_tier2, tier2_offset, tier2_size);
+	g_container = new ApfsContainer(g_disk_main, main_offset, main_size, g_disk_tier2, tier2_offset, tier2_size, g_xid);
 	g_container->Init();
 	g_volume = g_container->GetVolume(g_vol_id, g_password);
 	if (!g_volume)

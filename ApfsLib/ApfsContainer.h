@@ -36,7 +36,7 @@ class BlockDumper;
 class ApfsContainer
 {
 public:
-	ApfsContainer(Device *disk_main, uint64_t main_start, uint64_t main_len, Device *disk_tier2 = 0, uint64_t tier2_start = 0, uint64_t tier2_len = 0);
+	ApfsContainer(Device *disk_main, uint64_t main_start, uint64_t main_len, Device *disk_tier2 = 0, uint64_t tier2_start = 0, uint64_t tier2_len = 0, uint64_t xid = 0);
 	~ApfsContainer();
 
 	bool Init();
@@ -65,6 +65,8 @@ private:
 	Device *m_tier2_disk;
 	const uint64_t m_tier2_part_start;
 	const uint64_t m_tier2_part_len;
+
+	const uint64_t m_xid;
 
 	std::string m_passphrase;
 

@@ -30,13 +30,14 @@
 int g_debug = 0;
 bool g_lax = false;
 
-ApfsContainer::ApfsContainer(Device *disk_main, uint64_t main_start, uint64_t main_len, Device *disk_tier2, uint64_t tier2_start, uint64_t tier2_len) :
+ApfsContainer::ApfsContainer(Device *disk_main, uint64_t main_start, uint64_t main_len, Device *disk_tier2, uint64_t tier2_start, uint64_t tier2_len, uint64_t xid) :
 	m_main_disk(disk_main),
 	m_main_part_start(main_start),
 	m_main_part_len(main_len),
 	m_tier2_disk(disk_tier2),
 	m_tier2_part_start(tier2_start),
 	m_tier2_part_len(tier2_len),
+	m_xid(xid),
 	m_cpm(*this),
 	m_omap(*this),
 	// m_omap_tree(*this),
@@ -102,11 +103,24 @@ bool ApfsContainer::Init()
 		if ((sb->nx_o.o_type & OBJECT_TYPE_MASK) != OBJECT_TYPE_NX_SUPERBLOCK)
 			continue;
 
-		if (sb->nx_o.o_xid > max_xid)
-		{
-			max_xid = sb->nx_o.o_xid;
-			max_paddr = paddr;
+		if (m_xid == 0) {
+			std::cerr << "Found superblock with xid " << sb->nx_o.o_xid << std::endl;
+			if (sb->nx_o.o_xid > max_xid)
+			{
+				max_xid = sb->nx_o.o_xid;
+				max_paddr = paddr;
+			}
+		} else {
+			if (sb->nx_o.o_xid == m_xid) {
+				std::cerr << "Found superblock with specified xid of " << sb->nx_o.o_xid << std::endl;
+				max_xid = sb->nx_o.o_xid;
+				max_paddr = paddr;
+			}
 		}
+	}
+
+	if (m_xid != 0 && max_xid == 0) {
+		std::cerr << "Superblock with xid " << m_xid << " not found!" << std::endl;
 	}
 
 	if (max_xid > m_nx.nx_o.o_xid)
